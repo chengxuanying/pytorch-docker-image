@@ -60,20 +60,22 @@ RUN wget -O ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest
      ~/miniconda.sh -b -p /opt/conda && \
      rm ~/miniconda.sh
 ENV PATH /opt/conda/bin:$PATH
-RUN conda install -y python=3.8.8 numpy scipy h5py scikit-learn matplotlib dask pandas pyyaml mkl
+RUN conda create -n rtdl -y python=3.8.8 numpy scipy h5py scikit-learn matplotlib dask pandas pyyaml mkl
 
-RUN conda install pytorch==1.7.1 torchvision==0.8.2 cudatoolkit=10.1.243 numpy=1.19.2 -c pytorch -y
-RUN conda install cudnn=7.6.5 -c anaconda -y
-RUN git clone https://github.com/yandex-research/rtdl.git && cd rtdl && pip install -r requirements.txt
-RUN conda install -c conda-forge nodejs -y 
+RUN . /opt/conda/etc/profile.d/conda.sh && conda activate rtdl && \
+    conda install pytorch==1.7.1 torchvision==0.8.2 cudatoolkit=11.0 numpy=1.19.2 -c pytorch -y
 
-RUN conda env config vars set PYTHONPATH=${PYTHONPATH}:${REPO_DIR}
-RUN conda env config vars set PROJECT_DIR=${REPO_DIR}
-RUN conda env config vars set LD_LIBRARY_PATH=${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH}
-RUN conda env config vars set CUDA_HOME=${CONDA_PREFIX}
-RUN conda env config vars set CUDA_ROOT=${CONDA_PREFIX}
+RUN . /opt/conda/etc/profile.d/conda.sh && conda activate rtdl && \
+    git clone https://github.com/yandex-research/rtdl.git && cd rtdl && pip install -r requirements.txt
+
+RUN . /opt/conda/etc/profile.d/conda.sh && conda activate rtdl &&  \
+    conda env config vars set PYTHONPATH=${PYTHONPATH}:${REPO_DIR} && \
+    conda env config vars set PROJECT_DIR=${REPO_DIR} &&  \
+    conda env config vars set LD_LIBRARY_PATH=${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH} &&  \
+    conda env config vars set CUDA_HOME=${CONDA_PREFIX} && \
+    conda env config vars set CUDA_ROOT=${CONDA_PREFIX}
 
 # force update numpy by pip due to cython error
-RUN pip install numpy --upgrade
-# install more
-RUN pip install tensorboard tensorboardX six tqdm lmdb pyarrow py-lz4framed methodtools pathlib regex cython cffi sacrebleu editdistance
+RUN . /opt/conda/etc/profile.d/conda.sh && conda activate rtdl &&  \
+    pip install numpy --upgrade && \
+    pip install tensorboard tensorboardX six tqdm lmdb pyarrow py-lz4framed methodtools pathlib regex cython cffi sacrebleu editdistance
